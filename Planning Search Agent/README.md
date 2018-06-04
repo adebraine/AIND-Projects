@@ -1,5 +1,7 @@
 
 # Implement a Planning Search
+TODO:
+Compile an adequate README
 
 ## Synopsis
 

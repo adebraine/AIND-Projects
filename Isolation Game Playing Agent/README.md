@@ -1,6 +1,10 @@
 
 # Build a Game-playing Agent
 
+TODO:
+Compile an adequate README
+
+
 ![Example game of isolation](viz.gif)
 
 ## Synopsis
