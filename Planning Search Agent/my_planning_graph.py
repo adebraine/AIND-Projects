@@ -544,14 +544,6 @@ class PlanningGraph():
 
         :return: int
         """
-        # level_sum = 0
-        # for goal in self.problem.goal:
-        #     for level, _ in enumerate(self.s_levels):
-        #         for state in self.s_levels[level]:
-        #             if goal == state.symbol:
-        #                 level_sum += level
-        #                 return level_sum
-
         level_sum = 0
         for goal in self.problem.goal:
             isgoal = False
