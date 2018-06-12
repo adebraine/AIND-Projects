@@ -1,13 +1,13 @@
 import os.path
 from My_utils import *
-from new_sudoku import *
+import new_sudoku
 import sys
 
 """ [Level of Difficulty] = Input the level of difficulty of the sudoku puzzle. Difficulty levels
     include ‘Easy’ ‘Medium’ ‘Hard’ and ‘Insane’. Outputs a sudoku of desired
     difficulty."""
-level = "Hard"
-main(level)
+level = "Easy"
+new_sudoku.main(level)
 
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
@@ -53,7 +53,6 @@ def eliminate(values):
         digit = values[box]
         for peer in peers[box]:
             values = assign_value(values,peer,values[peer].replace(digit,''))
-#            values[peer] = values[peer].replace(digit,'')
     return values
 
 def only_choice(values):
@@ -62,7 +61,6 @@ def only_choice(values):
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
                 values = assign_value(values,dplaces[0],digit)
-#                values[dplaces[0]] = digit
     return values
 
 def reduce_puzzle(values):

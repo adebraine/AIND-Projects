@@ -13,7 +13,9 @@ class ModelSelector(object):
     base class for model selection (strategy design pattern)
     '''
 
-    def __init__(self, all_word_sequences: dict, all_word_Xlengths: dict, this_word: str,
+    def __init__(self, all_word_sequences: dict,
+                 all_word_Xlengths: dict,
+                 this_word: str,
                  n_constant=3,
                  min_n_components=2, max_n_components=10,
                  random_state=14, verbose=False):
@@ -36,14 +38,19 @@ class ModelSelector(object):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         # warnings.filterwarnings("ignore", category=RuntimeWarning)
         try:
-            hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
-                                    random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+            hmm_model = GaussianHMM(n_components=num_states,
+                                    covariance_type="diag",
+                                    n_iter=1000,
+                                    random_state=self.random_state,
+                                    verbose=False).fit(self.X, self.lengths)
             if self.verbose:
-                print("model created for {} with {} states".format(self.this_word, num_states))
+                print("model created for {} with {} states"
+                      .format(self.this_word, num_states))
             return hmm_model
         except:
             if self.verbose:
-                print("failure on {} with {} states".format(self.this_word, num_states))
+                print("failure on {} with {} states"
+                      .format(self.this_word, num_states))
             return None
 
 
@@ -62,10 +69,17 @@ class SelectorConstant(ModelSelector):
 
 
 class SelectorBIC(ModelSelector):
-    """ select the model with the lowest Bayesian Information Criterion(BIC) score
+    """ select the model with the lowest Bayesian Information
+    Criterion(BIC) score
 
     http://www2.imm.dtu.dk/courses/02433/doc/ch6_slides.pdf
     Bayesian information criteria: BIC = -2 * logL + p * logN
+    with:
+        p: number of parameters
+        -2 * logL: likelihood of the fitted model which decreases
+                   with increasing model complexity (more parameters p)
+        logN: number of data points which increases with
+              increasing complexity
     """
 
     def select(self):
@@ -76,15 +90,36 @@ class SelectorBIC(ModelSelector):
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on BIC scores
-        raise NotImplementedError
+        BIC, best_num_components = float("inf"), int
+        for num_components in range(self.min_n_components,
+                                    self.max_n_components + 1):
+            try:
+                logL = self.base_model(num_components)\
+                        .score(self.X, self.lengths)
+                logN = np.log(len(self.X))
+                p = num_components * num_components +\
+                    2 * len(self.X[0]) * num_components - 1
+                BIC_current = -2 * logL + p * logN
+
+                if BIC_current < BIC:
+                    BIC = BIC_current
+                    best_num_components = num_components
+            except:
+                pass
+            
+        if best_num_components:
+            return self.base_model(best_num_components)
+        else:
+            return self.base_model(self.n_constant)
 
 
 class SelectorDIC(ModelSelector):
     ''' select best model based on Discriminative Information Criterion
 
-    Biem, Alain. "A model selection criterion for classification: Application to hmm topology optimization."
-    Document Analysis and Recognition, 2003. Proceedings. Seventh International Conference on. IEEE, 2003.
+    Biem, Alain. "A model selection criterion for classification:
+        Application to hmm topology optimization."
+    Document Analysis and Recognition, 2003. Proceedings.
+    Seventh International Conference on. IEEE, 2003.
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.58.6208&rep=rep1&type=pdf
     https://pdfs.semanticscholar.org/ed3d/7c4a5f607201f3848d4c02dd9ba17c791fc2.pdf
     DIC = log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
@@ -93,8 +128,32 @@ class SelectorDIC(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+        DIC, best_num_components = float("-inf"), int
+        words = list(self.words.keys())
+        M = len(words)
+        words.remove(self.this_word)
+
+        for num_components in range(self.min_n_components,
+                                    self.max_n_components + 1):
+            try:
+                logP_Xi = self.base_model(num_components).score(self.X, self.lengths)
+                logP_Xnoti = 0
+
+                for word in words:
+                    X, lengths = self.hwords[word]
+                    logP_Xnoti += self.base_model(num_components).score(X, lengths)
+
+                DIC_current = logP_Xi - logP_Xnoti / (M - 1)
+                if DIC_current > DIC:
+                    DIC = DIC_current
+                    best_num_components = num_components
+            except:
+                pass
+
+        if best_num_components:
+            return self.base_model(best_num_components)
+        else:
+            return self.base_model(self.n_constant)
 
 
 class SelectorCV(ModelSelector):
@@ -105,5 +164,37 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection using CV
-        raise NotImplementedError
+        CV, best_num_components = float("-inf"), int
+
+        for num_components in range(self.min_n_components,
+                                    self.max_n_components + 1):
+            logL_s = 0
+            logL_n = 0
+            try:
+                if len(self.sequences) > 1:
+                    for train, test in KFold(n_splits=min(3, len(self.sequences))).split(self.sequences):
+                        try:
+                            X, lengths = combine_sequences(train, self.sequences)
+                            logL_s += self.base_model(num_components).score(X, lengths)
+                            logL_n += 1
+
+                            if logL_n > 0:
+                                CV_current = logL_s / logL_n
+                                if CV_current > CV:
+                                    CV = CV_current
+                                    best_num_components = num_components
+                        except:
+                            pass
+                else:
+                    CV_current = self.base_model(num_components).\
+                                score(self.X, self.lengths)
+                    if CV_current > CV:
+                        CV = CV_current
+                        best_num_components = num_components
+            except:
+                pass
+
+        if best_num_components:
+            return self.base_model(best_num_components)
+        else:
+            return self.base_model(self.n_constant)

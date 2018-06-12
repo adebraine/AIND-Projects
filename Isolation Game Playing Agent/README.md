@@ -1,144 +1,237 @@
 
 # Build a Game-playing Agent
 
-TODO:
-Compile an adequate README
-
-
 ![Example game of isolation](viz.gif)
 
-## Synopsis
+# Table of Contents
+1. [Problem Description](#Problem_Description)
+2. [Results Analysis](#Analysis)
 
-In this project, students will develop an adversarial search agent to play the game "Isolation".  Isolation is a deterministic, two-player game of perfect information in which the players alternate turns moving a single piece from one cell to another on a board.  Whenever either player occupies a cell, that cell becomes blocked for the remainder of the game.  The first player with no remaining legal moves loses, and the opponent is declared the winner.  These rules are implemented in the `isolation.Board` class provided in the repository. 
+## Project Description
+The purpose of this project was to develop an adversarial search agent to play the game "Isolation".  Isolation is a deterministic, two-player game of perfect information in which the players alternate turns moving a single piece from one cell to another on a board.  Whenever either player occupies a cell, that cell becomes blocked for the remainder of the game.  The first player with no remaining legal moves loses, and the opponent is declared the winner.  These rules are implemented in the `isolation.Board` class provided in the repository. 
 
-This project uses a version of Isolation where each agent is restricted to L-shaped movements (like a knight in chess) on a rectangular grid (like a chess or checkerboard).  The agents can move to any open cell on the board that is 2-rows and 1-column or 2-columns and 1-row away from their current position on the board. Movements are blocked at the edges of the board (the board does not wrap around), however, the player can "jump" blocked or occupied spaces (just like a knight in chess).
+This project uses a version of Isolation where each agent is restricted to L-shaped movements (like a knight in chess) on a 7x7 rectangular grid (like a chess or checkerboard).  The agents can move to any open cell granted that it respect the chess knight movement restrictions.
 
 Additionally, agents will have a fixed time limit each turn to search for the best move and respond.  If the time limit expires during a player's turn, that player forfeits the match, and the opponent wins.
 
-Students only need to modify code in the `game_agent.py` file to complete the project.  Additional files include example Player and evaluation functions, the game board class, and a template to develop local unit tests.  
+Two search agents were implemented in this projects, **MiniMax** and **Alpha-Beta pruning with iterative deepening**. 
 
+- **MiniMax**: Uses a simple recursive computation. The agent performs a depth-first search all the way down the tree, then the minimax values are back calculated up the tree.
+- **Alpha-Beta Pruning**: Prunes tree branches that are identified as failed attempts to minimize computation time.
+- **Iterative Deepening**: Keeps a depth-first approach but computes one depth of the tree at a time in order to re-order the moves to allow for more effective pruning with **Alpha-Beta Pruning**.
 
-## Instructions
+## Results Analysis
 
-In order to complete the Isolation project, students must submit code that passes all test cases for the required functions in `game_agent.py` and complete a report as specified in the rubric.  Students can submit using the [Udacity Project Assistant]() command line utility.  Students will receive feedback on test case success/failure after each submission.
+Below is the overall result of 200 games played per match
+![](tournament.JPG)
 
-Students must implement the following functions:
+The different search agents used are listed below:
+- **Random**: An agent that randomly chooses a move each turn.
+- **MM_Open**: MinimaxPlayer agent using the open_move_score heuristic with search depth 3
+- **MM_Center**: MinimaxPlayer agent using the center_score heuristic with search depth 3
+- **MM_Improved**: MinimaxPlayer agent using the improved_score heuristic with search depth 3
+- **AB_Open**: AlphaBetaPlayer using iterative deepening alpha-beta search and the open_move_score heuristic
+- **AB_Center**: AlphaBetaPlayer using iterative deepening alpha-beta search and the center_score heuristic
+- **AB_Improved**: AlphaBetaPlayer using iterative deepening alpha-beta search and the improved_score heuristic
+- **AB_Custom_#**: AlphaBetaPlayer using iterative deepening alpha-beta search and custom heuristic #.
 
-- `MinimaxPlayer.minimax()`: implement minimax search
-- `AlphaBetaPlayer.alphabeta()`: implement minimax search with alpha-beta pruning
-- `AlphaBetaPlayer.get_move()`: implement iterative deepening search
-- `custom_score()`: implement your own best position evaluation heuristic
-- `custom_score_2()`: implement your own alternate position evaluation heuristic
-- `custom_score_3()`: implement your own alternate position evaluation heuristic
+The different heuristics used are:
+- **open_move_score**: A heuristic that maximizes the number of open moves for the current player
+- **center_score**: A heuristic that prioratizes moves away from the center of the board
+- **improved_score**: A heuristic that maximizes the number of open moves for the player while minimizing the number of opponents open moves.
+- **Custom_#**: A series of custom heuristics described below.
 
-You may write or modify code within each file (but you must maintain compatibility with the function signatures provided).  You may add other classes, functions, etc., as needed, but it is not required.
+### Improved Score Heuristic
 
-The Project Assistant sandbox for this project places some restrictions on the modules available and blocks calls to some of the standard library functions.  In general, standard library functions that introspect code running in the sandbox are blocked, and the PA only allows the following modules `random`, `numpy`, `scipy`, `sklearn`, `itertools`, `math`, `heapq`, `collections`, `array`, `copy`, and `operator`. (Modules within these packages are also allowed, e.g., `numpy.random`.)
+The heuristic used as a basis of comparison for the custom heuristics
 
+#### Results:
+|             | AB_Improved Win Ratio (%): | AB_Improved Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 93.5                       | (187, 13)                |
+| MM_Open     | 77.0                       | (154, 46)                |
+| MM_Center   | 85.5                       | (171, 29)                |
+| MM_Improved | 74.0                       | (148, 52)                |
+| AB_Open     | 54.0                       | (108, 92)                |
+| AB_Center   | 58.0                       | (116, 84)                |
+| AB_Improved | 49.0                       | (98, 102)                |
 
-### Quickstart Guide
+Total Win Ratio (%): 70.14
 
-The following example creates a game and illustrates the basic API.  You can run this example by activating your aind anaconda environment and executing the command `python sample_players.py`
+### Heuristic 1: Difference between each players move, decaying aggressivity, prioratizing center position
 
-    from isolation import Board
-    from sample_players import RandomPlayer
-    from sample_players import GreedyPlayer
+This heuristic prioratizes moves that leads to higher number of player moves with lower number of opponents moves. It starts with a higher aggressive focus on opponents moves that decays as the board fills up. It also prioratizes moves closer to the center.
 
-    # create an isolation board (by default 7x7)
-    player1 = RandomPlayer()
-    player2 = GreedyPlayer()
-    game = Board(player1, player2)
+#### The heuristic formula:
 
-    # place player 1 on the board at row 2, column 3, then place player 2 on
-    # the board at row 0, column 5; display the resulting board state.  Note
-    # that the .apply_move() method changes the calling object in-place.
-    game.apply_move((2, 3))
-    game.apply_move((0, 5))
-    print(game.to_string())
+dist = distance between player move and center from 0 being center to 1 being a corner
 
-    # players take turns moving on the board, so player1 should be next to move
-    assert(player1 == game.active_player)
+decay = # of current blank spaces / # number of total blank spaces
 
-    # get a list of the legal moves available to the active player
-    print(game.get_legal_moves())
+(# of player moves - # of opponents moves \* 2 \* decay) * 1/dist
 
-    # get a successor of the current state by making a copy of the board and
-    # applying a move. Notice that this does NOT change the calling object
-    # (unlike .apply_move()).
-    new_game = game.forecast_move((1, 1))
-    assert(new_game.to_string() != game.to_string())
-    print("\nOld state:\n{}".format(game.to_string()))
-    print("\nNew state:\n{}".format(new_game.to_string()))
+#### Results:
+|             | AB_Custom_1 Win Ratio (%): | AB_Custom_1 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 94.0                       | (188, 12)                |
+| MM_Open     | 76.5                       | (153, 47)                |
+| MM_Center   | 90.5                       | (181, 19)                |
+| MM_Improved | 76.5                       | (153, 47)                |
+| AB_Open     | 52.0                       | (104, 96)                |
+| AB_Center   | 57.5                       | (115, 85)                |
+| AB_Improved | 50.5                       | (101, 99)                |
 
-    # play the remainder of the game automatically -- outcome can be "illegal
-    # move", "timeout", or "forfeit"
-    winner, history, outcome = game.play()
-    print("\nWinner: {}\nOutcome: {}".format(winner, outcome))
-    print(game.to_string())
-    print("Move history:\n{!s}".format(history))
+Total Win Ratio (%): 71.07
 
+### Heuristic 2: Difference between each players move with an aggressive approach
 
-### Coding
+This heuristic prioratizes moves that leads to higher number of player moves with lower number of opponents moves while putting more value on lower number of opponents moves.
 
-The steps below outline a suggested process for completing the project -- however, this is just a suggestion to help you get started.
+#### The heuristic formula:
 
-A stub for writing unit tests is provided in the [`test_game_agent.py`](tests/test_game_agent.py) file (no local test cases are provided). In order to run your tests, execute `python -m unittest` command (See the [unittest](https://docs.python.org/3/library/unittest.html#basic-example) module for information on getting started.)
+\# of player moves - # of opponents moves \* 2
 
-The primary mechanism for testing your code will be the Udacity Project Assistant command line utility.  You can install the Udacity-PA tool by activating your aind anaconda environment, then running `pip install udacity-pa`.  You can submit your code for scoring by running `udacity submit isolation`.  The project assistant server has a collection of unit tests that it will execute on your code, and it will provide feedback on any successes or failures.  You must pass all test cases in the project assistant before you can complete the project by submitting your report for review.
+#### Results:
+|             | AB_Custom_2 Win Ratio (%): | AB_Custom_2 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 93.5                       | (187, 13)                |
+| MM_Open     | 73.0                       | (146, 54)                |
+| MM_Center   | 89.5                       | (179, 21)                |
+| MM_Improved | 72.5                       | (145, 55)                |
+| AB_Open     | 51.5                       | (103, 97)                |
+| AB_Center   | 55.5                       | (111, 89)                |
+| AB_Improved | 49.5                       | (99, 101)                |
 
-0. Verify that the Udacity-PA tool is installed properly by submitting the project. Run `udacity submit isolation`. (You should see a list of test cases that failed -- that's expected because you haven't implemented any code yet.)
+Total Win Ratio (%): 69.29
 
-0. Modify the `MinimaxPlayer.minimax()` method to return any legal move for the active player.  Resubmit your code to the project assistant and the minimax interface test should pass.
+### Heuristic 3: Difference between each players move
 
-0. Further modify the `MinimaxPlayer.minimax()` method to implement the full recursive search procedure described in lecture (ref. [AIMA Minimax Decision](https://github.com/aimacode/aima-pseudocode/blob/master/md/Minimax-Decision.md)).  Resubmit your code to the project assistant and both the minimax interface and functional test cases will pass.
+This heuristic prioratizes moves that leads to higher number of player moves with lower number of opponents moves. 
 
-0. Start on the alpha beta test cases. Modify the `AlphaBetaPlayer.alphabeta()` method to return any legal move for the active player.  Resubmit your code to the project assistant and the alphabeta interface test should pass.
+#### The heuristic formula:
 
-0. Further modify the `AlphaBetaPlayer.alphabeta()` method to implement the full recursive search procedure described in lecture (ref. [AIMA Alpha-Beta Search](https://github.com/aimacode/aima-pseudocode/blob/master/md/Alpha-Beta-Search.md)).  Resubmit your code to the project assistant and both the alphabeta interface and functional test cases will pass.
+\# of player moves - # of opponents moves
 
-0. You can pass the interface test for the `AlphaBetaPlayer.get_move()` function by copying the code from `MinimaxPlayer.get_move()`.  Resubmit your code to the project assistant to see that the `get_move()` interface test case passes.
+#### Results:
+|             | AB_Custom_3 Win Ratio (%): | AB_Custom_3 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 94.5                       | (189, 11)                |
+| MM_Open     | 77.5                       | (155, 45)                |
+| MM_Center   | 90.5                       | (181, 19)                |
+| MM_Improved | 70.5                       | (141, 59)                |
+| AB_Open     | 50.0                       | (100, 100)               |
+| AB_Center   | 57.0                       | (114, 86)                |
+| AB_Improved | 50.0                       | (100, 100)               |
 
-0. Pass the test_get_move test by modifying `AlphaBetaPlayer.get_move()` to implement Iterative Deepening.  See Also [AIMA Iterative Deepening Search](https://github.com/aimacode/aima-pseudocode/blob/master/md/Iterative-Deepening-Search.md)
+Total Win Ratio (%): 70.0
 
-0. Finally, pass the heuristic tests by implementing any heuristic in `custom_score()`, `custom_score_2()`, and `custom_score_3()`.  (These test cases only validate the return value type -- it does not check for "correctness" of your heuristic.)  You can see example heuristics in the `sample_players.py` file.
+### Heuristic 6: Difference between each players move, decaying aggressivity, prioratizing outer position
 
+This heuristic is the same as heuristic 1 except that it prioratizes position further from the center. 
 
-### Tournament
+#### The heuristic formula:
 
-The `tournament.py` script is used to evaluate the effectiveness of your custom heuristics.  The script measures relative performance of your agent (named "Student" in the tournament) in a round-robin tournament against several other pre-defined agents.  The Student agent uses time-limited Iterative Deepening along with your custom heuristics.
+dist = distance between player move and center from 0 being center to 1 being a corner
 
-The performance of time-limited iterative deepening search is hardware dependent (faster hardware is expected to search deeper than slower hardware in the same amount of time).  The script controls for these effects by also measuring the baseline performance of an agent called "ID_Improved" that uses Iterative Deepening and the improved_score heuristic defined in `sample_players.py`.  Your goal is to develop a heuristic such that Student outperforms ID_Improved. (NOTE: This can be _very_ challenging!)
+decay = # of current blank spaces / # number of total blank spaces
 
-The tournament opponents are listed below. (See also: sample heuristics and players defined in sample_players.py)
+(# of player moves - # of opponents moves \* 2 \* decay) * dist
 
-- Random: An agent that randomly chooses a move each turn.
-- MM_Open: MinimaxPlayer agent using the open_move_score heuristic with search depth 3
-- MM_Center: MinimaxPlayer agent using the center_score heuristic with search depth 3
-- MM_Improved: MinimaxPlayer agent using the improved_score heuristic with search depth 3
-- AB_Open: AlphaBetaPlayer using iterative deepening alpha-beta search and the open_move_score heuristic
-- AB_Center: AlphaBetaPlayer using iterative deepening alpha-beta search and the center_score heuristic
-- AB_Improved: AlphaBetaPlayer using iterative deepening alpha-beta search and the improved_score heuristic
+#### Results:
+|             | AB_Custom_6 Win Ratio (%): | AB_Custom_6 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 93.5                       | (187, 13)                |
+| MM_Open     | 78.5                       | (157, 43)                |
+| MM_Center   | 86.0                       | (172, 28)                |
+| MM_Improved | 73.5                       | (147, 53)                |
+| AB_Open     | 53.5                       | (107, 93)                |
+| AB_Center   | 55.5                       | (111, 89)                |
+| AB_Improved | 49.0                       | (98, 102)                |
 
-## Submission
+Total Win Ratio (%): 69.93
 
-Before submitting your solution to a reviewer, you are required to submit your project to Udacity's Project Assistant, which will provide some initial feedback.
+### Heuristic 4,5,7: Different Variance of the distance factor
 
-Please see the instructions in the [AIND-Sudoku](https://github.com/udacity/AIND-Sudoku#submission) project repository for installation and setup instructions. 
+These heuristics are different variants of heuristic 1 and 6. They also use a distance factor that either values center or outer positions. However, these are applied to either the player or the opponent. I was curious to see whether it would drastically affect the outcome. 
 
-To submit your code to the project assistant, run `udacity submit isolation` from within the top-level directory of this project. You will be prompted for a username and password. If you login using google or facebook, follow the [instructions for using a jwt](https://project-assistant.udacity.com/faq).
+#### The heuristic 4 formula:
 
-This process will create a zipfile in your top-level directory named `isolation-<id>.zip`. This is the file that you should submit to the Udacity reviews system.
+dist = distance between player move and center from 0 being center to 1 being a corner
 
+decay = # of current blank spaces / # number of total blank spaces
 
-## Game Visualization
+(# of player moves \* 1/dist - # of opponents moves \* 2 \* decay)
 
-The `isoviz` folder contains a modified version of chessboard.js that can animate games played on a 7x7 board.  In order to use the board, you must run a local webserver by running `python -m http.server 8000` from your project directory (you can replace 8000 with another port number if that one is unavailable), then open your browser to `http://localhost:8000` and navigate to the `/isoviz/display.html` page.  Enter the move history of an isolation match (i.e., the array returned by the Board.play() method) into the text area and run the match.  Refresh the page to run a different game.  (Feel free to submit pull requests with improvements to isoviz.)
+#### The heuristic 5 formula:
 
+dist = distance between player move and center from 0 being center to 1 being a corner
 
-## PvP Competition
+decay = # of current blank spaces / # number of total blank spaces
 
-Once your project has been reviewed and accepted by meeting all requirements of the rubric, you are invited to complete the `competition_agent.py` file using any combination of techniques and improvements from lectures or online, and then submit it to compete in a tournament against other students from your cohort and past cohort champions.  Additional details (official rules, submission deadline, etc.) will be provided separately.
+(# of player moves \* dist - # of opponents moves \* 2 \* decay)
 
-The competition agent can be submitted using the Udacity project assistant:
+#### The heuristic 7 formula:
 
-    udacity submit isolation-pvp
+dist = distance between player move and center from 0 being center to 1 being a corner
+
+decay = # of current blank spaces / # number of total blank spaces
+
+(# of player moves - # of opponents moves \* 2 \* decay \* 1/dist)
+
+#### Heuristic 4 Results:
+|             | AB_custom_4 Win Ratio (%): | AB_custom_4 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 91.0                       | (182, 18)                |
+| MM_Open     | 77.0                       | (154, 46)                |
+| MM_Center   | 88.0                       | (176, 24)                |
+| MM_Improved | 68.0                       | (136, 64)                |
+| AB_Open     | 49.5                       | (99, 101)                |
+| AB_Center   | 52.5                       | (105, 95)                |
+| AB_Improved | 53.0                       | (106, 94)                |
+
+Total Win Ratio (%): 68.43
+
+#### Heuristic 5 Results:
+|             | AB_custom_5 Win Ratio (%): | AB_custom_5 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 95.5                       | (191, 9)                 |
+| MM_Open     | 75.0                       | (150, 50)                |
+| MM_Center   | 87.0                       | (174, 26)                |
+| MM_Improved | 72.5                       | (145, 55)                |
+| AB_Open     | 54.5                       | (109, 91)                |
+| AB_Center   | 54.5                       | (109, 91)                |
+| AB_Improved | 45.0                       | (90, 110)                |
+
+Total Win Ratio (%): 69.14
+
+#### Heuristic 7 Results:
+|             | AB_custom_7 Win Ratio (%): | AB_custom_7 Wins/Losses: |
+| ----------: | -------------------------: | -----------------------: |
+| Random      | 94.5                       | (189, 11)                |
+| MM_Open     | 72.0                       | (144, 56)                |
+| MM_Center   | 86.5                       | (173, 27)                |
+| MM_Improved | 67.0                       | (134, 66)                |
+| AB_Open     | 47.5                       | (95, 105)                |
+| AB_Center   | 59.0                       | (118, 82)                |
+| AB_Improved | 45.5                       | (91, 109)                |
+
+Total Win Ratio (%): 67.43
+
+## Conclusion:
+
+Overall the results are fairly close to each other. A variant of Heuristic 3 (difference between number of moves) seem to be preferable. A decaying aggressivity by having the number of opponent moves being more valuable at the beginning and less valuable towards the end seem to also help. However, a distance factor, as currently implemented doesn't improve the results significantly. 
+
+The graph below show the results of the three best heuristics and shows that the results are very close and it is hard to tell which is better.
+
+| Analyzed Heuristics Agents | Total Win Ratio (%) |
+| -------------------------: | ------------------: |
+| AB_custom_1                | 71.07               |
+| AB_custom_2                | 69.29               |
+| AB_custom_3                | 70.0                |
+| AB_custom_4                | 68.43               |
+| AB_custom_5                | 69.14               |
+| AB_custom_6                | 69.93               |
+| AB_custom_7                | 67.43               |
+| AB_Improved                | 70.14               |
+
+![](graph.png)
