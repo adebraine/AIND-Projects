@@ -1,5 +1,21 @@
 # Artificial Intelligence Nano-degree at Udacity
 
+## Facial Keypoint Detection and Real-time Filtering
+In this project we explored OpenCV and face detection applications, then build a Facial Keypoint Detection algorithm and finally add a sunglasses filter automatically on each face. We also adapt our algorithm to function on live video.
+
+<img src="Facial Keypoint Detection and Real-time Filtering/images/face4.gif" width="400">
+<img src="Facial Keypoint Detection and Real-time Filtering/images/face5.gif" width="400">
+
+## Machine Translation
+The goal of this project is to build a Deep Neural Network to accept English sentences and return French translations. The text data is first preprocessed and turned into integers passed through different Neural Network Models which have their performance analyzed to then build a final robust model. The final model is then used to demonstrate the translation task. 
+
+We first built a simple RNN with Gated Recurrent Unit cells (GRU), and then added more complexity. We explored embedding, bidirectionality, and an encoder-decoder.
+
+The dataset used is relatively small compared to typical machine translation datasets like [WMT](http://www.statmt.org/) to avoid long training times.
+
+## Dog Breed Image Classifier
+In this project, we explore Convolutional Neural Networks as a means to classify images. This project remains a learning excerise but could be expanded as a pipeline that can be used within a web or mobile app to process real-world, user-supplied images. Given an image of a dog, our algorithm will identify an estimate of the canine’s breed. If supplied an image of a human, the code will identify the resembling dog breed. 
+
 ## Sudoku Game Playing Agent
 
 **Sudoku** consists of a 9x9 grid, and the objective is to fill the grid with digits in such a way that each row, each column, and each of the 9 principal 3x3 subsquares (units) contains all of the digits from 1 to 9. 
@@ -33,3 +49,7 @@ Finally, we compared the results between each methodologies in order to determin
 The overall goal of this project is to build a word recognizer for American Sign Language video sequences, demonstrating the power of probabalistic models.  In particular, this project employs  [hidden Markov models (HMM's)](https://en.wikipedia.org/wiki/Hidden_Markov_model) to analyze a series of measurements taken from videos of American Sign Language (ASL) collected for research (see the [RWTH-BOSTON-104 Database](http://www-i6.informatik.rwth-aachen.de/~dreuw/database-rwth-boston-104.php)). 
 
 The raw data, train, and test sets are pre-defined.  We derived a variety of feature sets (Part 1), as well as implement three different model selection criterion to determine the optimal number of hidden states for each word model (Part 2). Finally, in Part 3 we implemented the recognizer and compared the effects the different combinations of feature sets and model selection criteria.
+
+## Recurrent Neural Networks: Time Series Prediction and Text Generation
+
+This project consists of two problems. One is to build a Recurrent Neural Network (RNN) to perform time series prediction of stock prices and the other is to build a RNN to generate English sentences character-by-character.
