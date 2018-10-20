@@ -13,6 +13,9 @@ We first built a simple RNN with Gated Recurrent Unit cells (GRU), and then adde
 
 The dataset used is relatively small compared to typical machine translation datasets like [WMT](http://www.statmt.org/) to avoid long training times.
 
+## Voice User Interface
+Built a deep neural network that functions as part of an end-to-end automatic speech recognition (ASR) pipeline!  
+
 ## Dog Breed Image Classifier
 In this project, we explore Convolutional Neural Networks as a means to classify images. This project remains a learning excerise but could be expanded as a pipeline that can be used within a web or mobile app to process real-world, user-supplied images. Given an image of a dog, our algorithm will identify an estimate of the canine’s breed. If supplied an image of a human, the code will identify the resembling dog breed. 
 
