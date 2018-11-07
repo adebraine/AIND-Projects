@@ -5,4 +5,4 @@ __pycache__/
 *.tar.gz
 *.pyc
 *.json
-udacity-2ndterm.pem
+*.pem
